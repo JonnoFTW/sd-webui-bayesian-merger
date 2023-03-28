@@ -146,3 +146,11 @@ dmypy.json
 
 # logs
 **/*.json
+
+# vim
+**/*.swp
+**/*.swo
+
+# configs
+!conf/config.tmpl.yaml
+!conf/payloads/cargo.tmpl.yaml

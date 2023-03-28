@@ -1,11 +1,9 @@
-from pathlib import Path
 from typing import Dict, Tuple, List
 
 from bayes_opt import BayesianOptimization, Events
 
-from sd_webui_bayesian_merger.artist import draw_unet
 from sd_webui_bayesian_merger.merger import NUM_TOTAL_BLOCKS
-from sd_webui_bayesian_merger.optimiser import Optimiser, convergence_plot
+from sd_webui_bayesian_merger.optimiser import Optimiser
 
 
 class BayesOptimiser(Optimiser):
@@ -24,32 +22,29 @@ class BayesOptimiser(Optimiser):
         self.optimizer.subscribe(Events.OPTIMIZATION_STEP, self.logger)
 
         self.optimizer.maximize(
-            init_points=self.init_points,
-            n_iter=self.n_iters,
+            init_points=self.cfg.init_points,
+            n_iter=self.cfg.n_iters,
         )
 
-    def _cleanup(self):
         # clean up and remove the last merge
-        self.merger.remove_previous_ckpt(self.iteration + 1)
+        try:
+            self.cleanup()
+        except FileNotFoundError:
+            return
 
     def postprocess(self) -> None:
+        print("\nRecap!")
         for i, res in enumerate(self.optimizer.res):
             print(f"Iteration {i}: \n\t{res}")
 
-        print(self.optimizer.max)
-
-        img_path = Path("logs", f"{self.merger.output_file.stem}-{self.method}.png")
         scores = parse_scores(self.optimizer.res)
-        convergence_plot(scores, figname=img_path)
-
-        unet_path = Path("logs", f"{self.merger.output_file.stem}-unet-{self.method}.png")
         best_base_alpha, best_weights = parse_params(self.optimizer.max["params"])
-        draw_unet(
+
+        self.plot_and_save(
+            scores,
             best_base_alpha,
             best_weights,
-            model_a=Path(self.model_a).stem,
-            model_b=Path(self.model_b).stem,
-            figname=unet_path,
+            minimise=False,
         )
 
 

@@ -1,3 +1,4 @@
+import itertools
 import os
 
 from typing import List
@@ -8,7 +9,7 @@ import matplotlib.patches as mpatches
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import seaborn as sns
 
-PathT = os.PathLike | str
+PathT = os.PathLike
 
 # colormap
 NUM_COLORS = 20
@@ -128,10 +129,9 @@ def draw_unet(
     ax = fig.add_subplot(111)
 
     weight_id = 0
-    bl = (0, 0)
-    for y in range(4):
-        for x in range(3):
-            weight_id, bl = in_block(x, y, weights, weight_id, bl, ax)
+    bl = (0.0, 0.0)
+    for y, x in itertools.product(range(4), range(3)):
+        weight_id, bl = in_block(x, y, weights, weight_id, bl, ax)
 
     # middle
     bl_x, bl_y = bl
@@ -166,18 +166,17 @@ def draw_unet(
     block_text(blt, "base_alpha")
 
     # out
-    for y in range(4):
-        for x in range(3):
-            weight_id, bl = out_block(
-                x,
-                y,
-                weights,
-                weight_id,
-                bl,
-                ax,
-                middle_x0,
-                middle_y0,
-            )
+    for y, x in itertools.product(range(4), range(3)):
+        weight_id, bl = out_block(
+            x,
+            y,
+            weights,
+            weight_id,
+            bl,
+            ax,
+            middle_x0,
+            middle_y0,
+        )
 
     ax.relim()
     ax.autoscale_view()
